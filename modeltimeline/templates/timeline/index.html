@@ -1,0 +1,354 @@
+{% extends "admin/base_site.html" %}
+{% load i18n humanize %}
+
+{% block title %}{% trans 'Timeline' %}{% endblock %}
+
+{% block extrahead %}
+
+<link rel="stylesheet" href="{{ STATIC_URL }}glyphicons/css/glyphicons.css">
+
+<style type="text/css">
+.panel-title {
+    font-size: 14px;
+}
+
+#content .navbar {
+    display: none;
+}
+
+.panel-heading {
+    border-radius: 0px !important;
+}
+
+.panel-group {
+    margin-bottom: 0;
+}
+
+.panel-body, .panel-default, .panel, .panel-default>.panel-heading {
+    border: none !important;
+}
+
+.panel-body, .panel-default>.panel-heading {
+    background-color: white;
+}
+
+.panel-body {
+    padding: 5px 15px 15px 15px;
+}
+
+.river {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.river .river-block {
+    position: relative;
+    clear: both;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.river .block {
+    padding: 2em 0 1em 1em;
+    margin-left: 7.5em !important;
+    margin: 0;
+    border-left: 3px solid #e8e8e8;
+    overflow: visible;
+}
+
+.panel a {
+    text-decoration: underline;
+}
+
+.block-past {
+    border-left-color: #449d44 !important;
+}
+
+.block-past .block-title:before {
+    border-color: #449d44 !important;
+}
+
+.block-today {
+    border-left-color: #ec971f !important;
+}
+
+.block-today .block-title:before {
+    border-color: #ec971f !important;
+}
+
+.block-future {
+    border-left-color: #5bc0de !important;
+}
+
+.block-future .block-title:before {
+    border-color: #5bc0de !important;
+}
+
+.river .timestamp {
+    font-size: .75em;
+    position: absolute;
+    top: 32px;
+    left: 0;
+    display: block;
+    width: 8.0em;
+    padding: .6em .55em;
+    margin-bottom: 1.5em;
+    background: white;
+    text-align: center;
+
+    content: " ";
+}
+
+.river .timestamp:after {
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    margin: 0;
+    pointer-events: none;
+    border-top: 14px solid transparent;
+    border-bottom: 14px solid transparent;
+    border-left: 11px solid white;
+}
+
+.river .block-title:before {
+    content: "";
+    position: absolute;
+    left: -23px;
+    top: 12px;
+    display: block;
+    width: 14px;
+    height: 14px;
+    border: 3px solid #d2d3d2;
+    border-radius: 14px;
+    background: #efefef;
+}
+
+.river .block-title {
+    position: relative;
+}
+
+.river .no-entries {
+    margin-bottom: 20px;
+    padding-top: 10px;
+}
+
+.panel-heading {
+    padding: 10px;
+}
+
+.right-align {
+    text-align: right;
+}
+
+.timeline-nav {
+    padding: 2px;
+    background-color: white;
+    position: fixed;
+    bottom: 5px;
+    right: 10px;
+    border-radius: 5px;
+}
+
+.filter-nav label {
+    margin-right: 10px;
+}
+
+.filter-nav {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.date-button {
+    width: 340px;
+    float: left;
+}
+
+.filters {
+    float: left;
+    padding: 6px 5px 0 0;
+}
+
+.date {
+    width: 80px;
+    margin-right: 10px;
+}
+
+.filter-nav:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.loader {
+    top: 50%;
+    left: 50%;
+    margin-top: -100px;
+    margin-left: -100px;
+    z-index: 200;
+    position: fixed;
+}
+
+.loader img {
+    width: 200px;
+}
+
+.hideDark {
+    background-color: black;
+    background-image: none;
+    opacity: 0.9;
+    z-index: 100;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.glyphicons {
+    padding-left: 20px;
+}
+
+.glyphicons:before {
+    font: 14px/1em 'Glyphicons Regular';
+    margin: -7px 0px 0 0;
+}
+
+.minor {
+    color: #9197a3;
+}
+
+
+</style>
+{% endblock %}
+
+{% block extra_body %}
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        var scrollToDay = function (selector) {
+            if ($(selector).length) {
+                $('html, body').animate({
+                    scrollTop: $(selector).offset().top - 70
+                }, 500);
+            }
+        };
+
+        var showLoad = function () {
+            $("#load-content").button('loading');
+            $(".overlay,.loader").show();
+        }
+
+        var hideLoad = function () {
+            $("#load-content").button('reset');
+            $(".overlay,.loader").hide();
+        }
+
+        var loadContent = function () {
+            showLoad();
+
+            var filters = [];
+            $('.filter:checked').each(function (index) {
+                filters.push($(this).attr('name'));
+            })
+
+            var data = {filters: filters, start: $('#start_date').val(), end: $('#end_date').val()}
+            //return;
+            $("#timeline").load("{% url 'timeline_content' %}?" + decodeURIComponent($.param(data)),
+                    function (response, status, xhr) {
+
+                        hideLoad();
+
+                        if ($('.today').length === 0) {
+                            $('#to-today').hide()
+                        } else {
+                            $('#to-today').show()
+                        }
+
+                        $("#load-content").button('reset');
+                        if (status == "error") {
+                            alert('Fehler beim laden: ' + xhr.status + " - " + xhr.statusText)
+                        } else {
+                            scrollToDay(".today");
+                        }
+                    }
+            );
+        };
+
+        $("#load-content").on("click", function () {
+            loadContent();
+        });
+
+        $("#to-future").on("click", function () {
+            scrollToDay(".river-block:first")
+        })
+
+        $("#to-today").on("click", function () {
+            scrollToDay(".today")
+        })
+
+        $("#to-past").on("click", function () {
+            scrollToDay(".river-block:last")
+        })
+
+        $("#to-filter").on("click", function () {
+            scrollToDay(".filters")
+        })
+
+        loadContent();
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+
+
+<div class="filter-nav well">
+    <div class="filters">
+        {% for f in config %}
+        <label>
+            <input class="filter" type="checkbox" name="{{f.class_name}}"
+            {% if f.checked %}checked="checked"{% endif %}> {{f.verbose_name}}
+        </label>
+        {% endfor %}
+    </div>
+    <div class="date-button">
+        von <input id="start_date" class="date" placeholder="tt.mm.jjjj"
+                   value="{{config.get_start_date}}">
+
+        bis <input id="end_date" class="date" placeholder="tt.mm.jjjj" value="{{config.get_end_date}}">
+        <button id="load-content" ptype="button" class="btn btn btn-info" data-loading-text="Laden...">
+            Laden
+        </button>
+    </div>
+</div>
+</div>
+
+<div id="timeline">
+</div>
+
+<div class="timeline-nav">
+    <div class="btn-group">
+        <button id="to-past" type="button" class="btn btn-default"><span class="glyphicon glyphicon-arrow-down"></span>
+        </button>
+        <button id="to-today" type="button" class="btn btn btn-default">Heute</button>
+        <button id="to-future" type="button" class="btn btn btn-default"><span
+                class="glyphicon glyphicon-arrow-up"></span></button>
+    </div>
+    <button id="to-filter" type="button" class="btn btn-default"><span class="glyphicon glyphicon-filter"></span>
+    </button>
+</div>
+
+<div class="overlay" style="display: none"></div>
+<div class="loader" style="display: none">
+    <img src="{{ STATIC_URL }}/img/loading-image-640.gif">
+</div>
+{% endblock %}

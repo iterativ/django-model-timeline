@@ -1,0 +1,62 @@
+{% load i18n humanize %}
+
+{% if timeliner %}
+<ul class="river">
+    {% for k, v in timeliner %}
+    <li class="river-block ">
+        <div class="block block-thumb block-{{v.zone}} {{v.zone}}">
+
+            <div class="block-content">
+                <div class="block-title"></div>
+                <time class="timestamp">{{k|naturalday}}</time>
+
+                {% if v.entries %}
+                <div class="panel-group" id="accordion{ forloop.counter0 }}">
+                    {% for l in v.entries %}
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                <a data-toggle="collapse" data-parent="#accordion"
+                                   href="#collapse{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}">
+                                    <div class="row">
+                                        <div class="col-sm-9">{% if l.icon %}<span class="glyphicons {{l.icon}}"></span>{% endif %}
+                                            <b>{{l.type}}</b>:
+                                            <span>{{l.title|truncatechars:140}}</span>
+                                        </div>
+                                        <div class="col-sm-3 right-align minor">{{l.action}} {{l.time|time:"H:i"}} </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        <div id="collapse{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}"
+                             class="panel-collapse collapse">
+                            <div class="panel-body">
+                                <table class="table">
+                                    {% for k, v in l.dict.items %}
+                                    {% if v %}
+                                    <tr
+                                    {% if forloop.last %}class="last"{% endif%}>
+                                    <td>{{k}}</td>
+                                    <td>{{v|linebreaksbr}}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="no-entries">
+            Keine Einträge
+            </div>
+            {% endif %}
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+Keine Einträge
+{% endif %}
