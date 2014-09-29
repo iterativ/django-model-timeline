@@ -26,6 +26,11 @@ Quick start
 
 
 Hints
------------
+-----
 * Optimized for Bootstrap 3
 * Requires Jquery
+
+TODO
+----
+* Improve Docs
+* Remove glyphicons dependency
