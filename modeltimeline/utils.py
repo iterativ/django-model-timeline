@@ -14,6 +14,8 @@ from django.core.urlresolvers import reverse
 from django.db.models import ForeignKey, Q
 from django.utils.datastructures import SortedDict
 from django.utils.safestring import mark_safe
+import pprint
+from django_extensions.db.fields.json import JSONDict, JSONList
 
 TL_IGNORE_FIELDS = getattr(settings, 'TL_IGNORE_FIELDS', ['password'])
 TL_DEFAULT_FIELDS = getattr(settings, 'TL_DEFAULT_FIELDS', ['created'])
@@ -255,6 +257,12 @@ def dict_for_instance(instance):
             v = v.strftime("%d.%m.%Y")
         elif type(v) == datetime.datetime:
             v = v.strftime("%d.%m.%Y %H:%M")
+        elif k.lower() == 'url' and v:
+            v = mark_safe('<a href="%(url)s">%(url)s</a>' % {'url': v})
+        elif isinstance(v, JSONDict):
+            v = mark_safe(u'<pre>%s</pre>' % pprint.pformat(dict(v), indent=2))
+        elif isinstance(v, JSONList):
+            v = mark_safe(u'<pre>%s</pre>' % pprint.pformat(list(v), indent=2))
 
         data_map[k] = v
 
