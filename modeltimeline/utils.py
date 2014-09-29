@@ -8,15 +8,18 @@
 # Created on 16/09/14
 # @author: maersu
 import datetime
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db.models import ForeignKey, Q
 from django.utils.datastructures import SortedDict
 from django.utils.safestring import mark_safe
 
-IGNORE_FIELDS = ['password']
-DATE_FORMAT = '%d.%m.%Y'
-DEFAULT_DAYS = 20
+TL_IGNORE_FIELDS = getattr(settings, 'TL_IGNORE_FIELDS', ['password'])
+TL_DEFAULT_FIELDS = getattr(settings, 'TL_DEFAULT_FIELDS', ['created'])
+TL_DEFAULT_DAYS_BACKWARD = getattr(settings, 'TL_DEFAULT_DAYS_BACKWARD', 20)
+TL_DEFAULT_DAYS_FORWARD = getattr(settings, 'TL_DEFAULT_DAYS_FORWARD', 20)
+TL_ICON_FONT_CSS_URL = getattr(settings, 'TL_ICON_FONT_CSS_URL', '/static/glyphicons/css/glyphicons.css')
 
 
 class TimeLiner(object):
@@ -35,7 +38,7 @@ class TimeLiner(object):
     def add_time_stamped(self, klass, fields=None, icon=''):
 
         if fields is None:
-            fields = ['created']
+            fields = TL_DEFAULT_FIELDS
 
         query = Q()
         for f in fields:
@@ -81,7 +84,7 @@ class TimeLiner(object):
                 else:
                     first = adate
                     self.add_entity(adate, entity, use_cache=use_cache, icon=icon,
-                                        action=self.get_field_verbose_name(entity, field))
+                                    action=self.get_field_verbose_name(entity, field))
 
     def add_entity(self, entry_datetime, entity, url=None, icon=None, action=None, use_cache=False):
 
@@ -158,26 +161,28 @@ class DataFilterConfig(object):
 
     def next(self):
         next = self.iterator.next()
-
-        class_name = self.getClassName(next[0])
+        klass = next['model']
+        class_name = self.getClassName(klass)
         if self.used_timeline_filters:
             checked = (class_name in self.used_timeline_filters)
         else:
-            checked = next[3] if len(next) > 3 else True
+            checked = True
 
-        return {'class': next[0], 'checked': checked, 'class_name': class_name,
-                'icon': next[1],
-                'verbose_name': self.getVerboseName(next[0]),
-                'fields': next[2] if len(next) > 2 else None}
+        next['class_name'] = class_name
+        next.setdefault('checked', checked)
+        next.setdefault('fields', TL_DEFAULT_FIELDS)
+        next.setdefault('verbose_name', self.getVerboseName(klass))
+
+        return next
 
     def get_start_date(self):
-        return (datetime.date.today() + datetime.timedelta(days=-DEFAULT_DAYS)).strftime(DATE_FORMAT)
+        return ''
 
     def get_end_date(self):
-        return (datetime.date.today() + datetime.timedelta(days=DEFAULT_DAYS)).strftime(DATE_FORMAT)
+        return ''
 
     def parse_date(self, date_str):
-        return datetime.datetime.strptime(date_str, DATE_FORMAT)
+        return datetime.date.today()
 
 
 def dict_for_instance(instance):
@@ -199,7 +204,7 @@ def dict_for_instance(instance):
     for f in opts.fields:
         k = unicode(f.verbose_name).capitalize()
 
-        if f.name in IGNORE_FIELDS:
+        if f.name in TL_IGNORE_FIELDS:
             continue
 
         v = getattr(instance, f.name)
@@ -214,9 +219,10 @@ def dict_for_instance(instance):
                     if hasattr(instance, 'object_id'):
                         try:
                             fobj = v.get_object_for_this_type(id=getattr(instance, 'object_id'))
-                            text  = '%s: %s' % (v,fobj)
+                            text = '%s: %s' % (v, fobj)
                             if hasattr(fobj, 'get_absolute_url'):
-                                text = mark_safe('<a href="%(url)s">%(text)s</a>' % {'url': fobj.get_absolute_url(), 'text': text})
+                                text = mark_safe(
+                                    '<a href="%(url)s">%(text)s</a>' % {'url': fobj.get_absolute_url(), 'text': text})
                             data_map['Content Object'] = text
 
                         except:
@@ -230,7 +236,8 @@ def dict_for_instance(instance):
                         text = '%s: %s' % (klass, v)
 
                         if hasattr(v, 'get_absolute_url'):
-                            text = mark_safe('<a href="%(url)s">%(text)s</a>' % {'url': v.get_absolute_url(), 'text': text})
+                            text = mark_safe(
+                                '<a href="%(url)s">%(text)s</a>' % {'url': v.get_absolute_url(), 'text': text})
 
                         data_map[k] = text
                         continue

@@ -5,7 +5,7 @@
 
 {% block extrahead %}
 
-<link rel="stylesheet" href="{{ STATIC_URL }}glyphicons/css/glyphicons.css">
+<link rel="stylesheet" href="{{TL_ICON_FONT_CSS_URL}}">
 
 <style type="text/css">
 .panel-title {
@@ -173,7 +173,7 @@
     padding: 6px 5px 0 0;
 }
 
-.date {
+.date-button input {
     width: 80px;
     margin-right: 10px;
 }
@@ -226,7 +226,6 @@
     color: #9197a3;
 }
 
-
 </style>
 {% endblock %}
 
@@ -260,9 +259,9 @@
                 filters.push($(this).attr('name'));
             })
 
-            var data = {filters: filters, start: $('#start_date').val(), end: $('#end_date').val()}
+            var data = {filters: filters, start: $('#id_start').val(), end: $('#id_end').val()}
             //return;
-            $("#timeline").load("{% url 'timeline_content' %}?" + decodeURIComponent($.param(data)),
+            $("#timeline").load("?content=true&" + decodeURIComponent($.param(data)),
                     function (response, status, xhr) {
 
                         hideLoad();
@@ -275,7 +274,7 @@
 
                         $("#load-content").button('reset');
                         if (status == "error") {
-                            alert('Fehler beim laden: ' + xhr.status + " - " + xhr.statusText)
+                            alert({% trans 'Error' %}+':' + xhr.status + " - " + xhr.statusText)
                         } else {
                             scrollToDay(".today");
                         }
@@ -321,12 +320,10 @@
         {% endfor %}
     </div>
     <div class="date-button">
-        von <input id="start_date" class="date" placeholder="tt.mm.jjjj"
-                   value="{{config.get_start_date}}">
-
-        bis <input id="end_date" class="date" placeholder="tt.mm.jjjj" value="{{config.get_end_date}}">
-        <button id="load-content" ptype="button" class="btn btn btn-info" data-loading-text="Laden...">
-            Laden
+        von {{ form.start }}
+        bis {{ form.end }}
+        <button id="load-content" ptype="button" class="btn btn btn-info" data-loading-text="{% trans 'Load' %}...">
+            {% trans 'Load' %}
         </button>
     </div>
 </div>
@@ -339,7 +336,7 @@
     <div class="btn-group">
         <button id="to-past" type="button" class="btn btn-default"><span class="glyphicon glyphicon-arrow-down"></span>
         </button>
-        <button id="to-today" type="button" class="btn btn btn-default">Heute</button>
+        <button id="to-today" type="button" class="btn btn btn-default">{% trans "today" %}</button>
         <button id="to-future" type="button" class="btn btn btn-default"><span
                 class="glyphicon glyphicon-arrow-up"></span></button>
     </div>
