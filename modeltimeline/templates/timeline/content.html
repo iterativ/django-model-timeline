@@ -1,69 +1,76 @@
 {% load i18n humanize %}
 
 {% if timeliner %}
-<ul class="river">
-    {% for k, v in timeliner %}
-    <li class="river-block ">
-        <div class="block block-thumb block-{{v.zone}} {{v.zone}}">
+    <ul class="river">
+        {% for k, v in timeliner %}
+            <li class="river-block ">
+                <div class="block block-thumb block-{{ v.zone }} {{ v.zone }}">
 
-            <div class="block-content">
-                <div class="block-title"></div>
-                <time class="timestamp">{{k|naturalday}}</time>
+                    <div class="block-content">
+                        <div class="block-title"></div>
+                        <time class="timestamp">{{ k|naturalday }}</time>
 
-                {% if v.entries %}
-                <div class="panel-group" id="accordion{ forloop.counter0 }}">
-                    {% for l in v.entries %}
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <div class="panel-title">
-                                <a data-toggle="collapse" data-parent="#accordion"
-                                   href="#collapse{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}">
-                                    <div class="row">
-                                        <div class="col-sm-9">{% if l.icon %}{% include "timeline/icon.html" %}{% endif %}
-                                            <b>{{l.type}}</b>:
-                                            <span>{{l.title|truncatechars:140}}</span>
+                        {% if v.entries %}
+                            <div class="panel-group" id="accordion{ forloop.counter0 }}">
+                                {% for l in v.entries %}
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <div class="panel-title">
+                                                <a data-toggle="collapse" data-parent="#accordion"
+                                                   href="#collapse{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}">
+                                                    <div class="row row-fluid">
+                                                        <div class="col-sm-9 span9">{% if l.icon %}
+                                                            <span class="glyphicons {{ l.icon }}"></span>{% endif %}
+                                                            <b>{{ l.type }}</b>:
+                                                            <span>{{ l.title|truncatechars:140 }}</span>
+                                                        </div>
+                                                        <div class="col-sm-3 span3 right-align minor">{{ l.action }}
+                                                            {% with l.time|time:"H:i" as item_time %}
+                                                                {% if item_time != '00:00' %}
+                                                                    {{ item_time }}
+                                                                {% endif %}
+                                                            {% endwith %}
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </div>
                                         </div>
-                                        <div class="col-sm-3 right-align minor">{{l.action}} {{l.time|time:"H:i"}} </div>
+                                        <div id="collapse{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}"
+                                             class="panel-collapse collapse">
+                                            <div class="panel-body">
+                                                <table class="table">
+                                                    {% for k, v in l.dict.items %}
+                                                        {% if v %}
+                                                            <tr
+                                                                    {% if forloop.last %}class="last"{% endif %}>
+                                                                <td>{{ k }}</td>
+                                                                <td>{{ v|linebreaksbr }}</td>
+                                                            </tr>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </table>
+                                            </div>
+                                        </div>
                                     </div>
-                                </a>
+                                {% endfor %}
                             </div>
-                        </div>
-                        <div id="collapse{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}"
-                             class="panel-collapse collapse">
-                            <div class="panel-body">
-                                <table class="table">
-                                    {% for k, v in l.dict.items %}
-                                    {% if v %}
-                                    <tr
-                                    {% if forloop.last %}class="last"{% endif%}>
-                                    <td>{{k}}</td>
-                                    <td>{{v|linebreaksbr}}</td>
-                                    </tr>
-                                    {% endif %}
-                                    {% endfor %}
-                                </table>
                             </div>
-                        </div>
-                    </div>
-                    {% endfor %}
+                        {% else %}
+                            <div class="no-entries">
+                                {% trans "No entries" %}
+                            </div>
+                        {% endif %}
                 </div>
-            </div>
-            {% else %}
-            <div class="no-entries">
-            {% trans "No entries" %}
-            </div>
-            {% endif %}
-        </div>
-    </li>
-    {% endfor %}
-</ul>
+            </li>
+        {% endfor %}
+    </ul>
 {% elif errors %}
     <div class="alert alert-error alert-danger" style="margin-top: 10px">
-    <ul>
-    {% for e,v in errors.items %}
-        {{ v }}
-    {% endfor %}
-    </ul>
+        <ul>
+            {% for e,v in errors.items %}
+                {{ v }}
+            {% endfor %}
+        </ul>
     </div>
 {% else %}
     {% trans "No entries" %}

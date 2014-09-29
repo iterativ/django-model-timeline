@@ -21,7 +21,6 @@ TL_DEFAULT_DAYS_BACKWARD = getattr(settings, 'TL_DEFAULT_DAYS_BACKWARD', 20)
 TL_DEFAULT_DAYS_FORWARD = getattr(settings, 'TL_DEFAULT_DAYS_FORWARD', 20)
 TL_ICON_FONT_CSS_URL = getattr(settings, 'TL_ICON_FONT_CSS_URL', '/static/glyphicons/css/glyphicons.css')
 
-
 class TimeLiner(object):
     def __init__(self, start, end):
         self.start = datetime.datetime.combine(start, datetime.datetime.min.time())
@@ -73,6 +72,10 @@ class TimeLiner(object):
 
         for field in fields:
             adate = getattr(entity, field)
+
+            if type(adate) == datetime.date:
+                adate = datetime.datetime(adate.year, adate.month, adate.day)
+
             if adate:
 
                 if first:
@@ -166,10 +169,10 @@ class DataFilterConfig(object):
         if self.used_timeline_filters:
             checked = (class_name in self.used_timeline_filters)
         else:
-            checked = True
+            checked = next.get('checked', True)
 
         next['class_name'] = class_name
-        next.setdefault('checked', checked)
+        next['checked'] = checked
         next.setdefault('fields', TL_DEFAULT_FIELDS)
         next.setdefault('verbose_name', self.getVerboseName(klass))
 

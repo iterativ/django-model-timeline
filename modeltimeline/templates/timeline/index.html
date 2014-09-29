@@ -1,9 +1,9 @@
-{% extends "admin/base_site.html" %}
+{% extends "timeline/base.html" %}
 {% load i18n humanize %}
 
 {% block title %}{% trans 'Timeline' %}{% endblock %}
 
-{% block extrahead %}
+{% block tl_css %}
 
     <link rel="stylesheet" href="{{ TL_ICON_FONT_CSS_URL }}">
 
@@ -229,7 +229,8 @@
     </style>
 {% endblock %}
 
-{% block extra_body %}
+{% block tl_js %}
+    {{ block.super }}
     <script type="text/javascript">
         $(document).ready(function () {
 
@@ -260,7 +261,7 @@
                 })
 
                 var data = {filters: filters, start: $('#id_start').val(), end: $('#id_end').val()}
-                //return;
+
                 $("#timeline").load("?content=true&" + decodeURIComponent($.param(data)),
                     function (response, status, xhr) {
 
@@ -274,7 +275,7 @@
 
                         $("#load-content").button('reset');
                         if (status == "error") {
-                            alert({% trans 'Error' %}+':' + xhr.status + " - " + xhr.statusText)
+                            alert('{% trans "Error" %}'+':' + xhr.status + " - " + xhr.statusText)
                         } else {
                             scrollToDay(".today");
                         }
@@ -307,7 +308,7 @@
     </script>
 {% endblock %}
 
-{% block content %}
+{% block tl_content %}
 
     <div class="filter-nav well">
         <div class="filters">
@@ -333,15 +334,12 @@
 
     <div class="timeline-nav">
         <div class="btn-group">
-            <button id="to-past" type="button" class="btn btn-default"><span
-                    class="glyphicon glyphicon-arrow-down"></span>
+            <button id="to-past" type="button" class="btn btn-default">{% trans "bottom" %}
             </button>
             <button id="to-today" type="button" class="btn btn btn-default">{% trans "today" %}</button>
-            <button id="to-future" type="button" class="btn btn btn-default"><span
-                    class="glyphicon glyphicon-arrow-up"></span></button>
+            <button id="to-future" type="button" class="btn btn btn-default">{% trans "top" %}</button>
         </div>
-        <button id="to-filter" type="button" class="btn btn-default"><span class="glyphicon glyphicon-filter"></span>
-        </button>
+        <button id="to-filter" type="button" class="btn btn-default">{% trans "filter" %}</button>
     </div>
 
     <div class="overlay" style="display: none"></div>
